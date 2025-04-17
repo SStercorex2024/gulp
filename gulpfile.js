@@ -2,7 +2,7 @@ const {src, dest, watch, series, parallel} = require('gulp');
 
 const scss = require('gulp-sass')(require('sass'));
 const concat = require('gulp-concat');
-const uglify = require('gulp-uglify');
+const uglify = require('gulp-uglify-es');
 const autoprefixer = require('gulp-autoprefixer');
 const cleanCSS = require('gulp-clean-css');
 const browserSync = require('browser-sync').create();
@@ -17,6 +17,8 @@ const webpCss = require('gulp-webp-css');
 const data = require('gulp-data');
 const newer = require('gulp-newer');
 const changed = require('gulp-changed');
+const sassGlob = require('gulp-sass-glob');
+const svgSprite = require('gulp-svg-sprite');
 
 // Пути
 const paths = {
@@ -62,6 +64,7 @@ const plumberNotify = (title) => plumber({
 function styles() {
     return src(paths.styles.src)
         .pipe(plumberNotify("SCSS Error"))
+        .pipe(sassGlob())
         .pipe(scss())
         .pipe(webpCss())
         .pipe(autoprefixer())
@@ -113,7 +116,31 @@ function webpConversion() {
         .pipe(dest(paths.images.webpDest));
 }
 
-// Пример для других файлов, например JSON
+function svgSprite() {
+    return src('app/images/icons/*.svg')
+        .pipe(svgSprite({
+            mode: {
+                symbol: {
+                    sprite: 'sprite.svg', // теперь просто имя файла
+                    example: false
+                }
+            },
+            shape: {
+                transform: [
+                    {
+                        svgo: {
+                            plugins: [
+                                {removeAttrs: {attrs: '(fill|stroke|style)'}}
+                            ]
+
+                        }
+                    }
+                ]
+            }
+        }))
+        .pipe(dest('dist/img/icons')); // логичный путь
+}
+
 function processJsonData() {
     return src('app/data/**/*.json')
         .pipe(changed('dist/data', {hasChanged: changed.compareContents}))  // Проверка изменения содержимого
@@ -139,6 +166,7 @@ function watching() {
     });
     watch(paths.styles.src, styles);
     watch(paths.html.watch, html);
+    watch('app/images/icons/*.svg', svgSprite);
     watch('app/*.html').on('change', browserSync.reload);
     watch(paths.images.src, series(optimizeImages, webpConversion));  // Слежка за изображениями
     watch('app/data/**/*.json', processJsonData);  // Пример слежки за другими файлами (JSON)
@@ -147,8 +175,9 @@ function watching() {
 // Сборка
 const build = series(
     cleanDist,
-    parallel(styles, scripts, html, optimizeImages, webpConversion, processJsonData, copy.fonts, copy.files)
+    parallel(styles, scripts, html, optimizeImages, webpConversion, svgSprite, processJsonData, copy.fonts, copy.files)
 );
+
 
 // CLI
 exports.styles = styles;
