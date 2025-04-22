@@ -18,36 +18,38 @@ const data = require('gulp-data');
 const newer = require('gulp-newer');
 const changed = require('gulp-changed');
 const sassGlob = require('gulp-sass-glob');
-const svgSprite = require('gulp-svg-sprite');
+const svgSpriteModule = require('gulp-svg-sprite');
 
 // Пути
+const themeName = 'project'; // Название темы
+
 const paths = {
     html: {
-        src: 'app/html/index.html',
-        watch: 'app/html/**/*.html',
-        json: 'app/html/data/maps.json',
-        dest: 'dist'
+        src: 'src/html/index.html',  // Исходник HTML
+        watch: 'src/html/**/*.html', // Для наблюдения за HTML
+        json: 'src/html/data/maps.json', // Данные
+        dest: `wp-content/themes/${themeName}/` // Путь для HTML в тему WordPress
     },
     styles: {
-        src: 'app/scss/style.scss',
-        dest: 'app/css'
+        src: 'src/scss/style.scss', // Исходник SCSS
+        dest: `wp-content/themes/${themeName}/assets/css` // Путь для стилей в тему WordPress
     },
     scripts: {
-        src: 'app/js/main.js',
-        dest: 'app/js'
+        src: 'src/js/main.js', // Исходник JS
+        dest: `wp-content/themes/${themeName}/assets/js` // Путь для скриптов в тему WordPress
     },
     images: {
-        src: 'app/images/**/*',
-        dest: 'dist/img',
-        webpDest: 'dist/img/webp'
+        src: 'src/images/**/*', // Все изображения
+        dest: `wp-content/themes/${themeName}/assets/images`, // Путь для изображений в тему
+        webpDest: `wp-content/themes/${themeName}/assets/images/webp` // Для WebP изображений
     },
     fonts: {
-        src: 'app/fonts/**/*',
-        dest: 'dist/fonts'
+        src: 'src/fonts/**/*', // Папка с шрифтами
+        dest: `wp-content/themes/${themeName}/assets/fonts` // Путь для шрифтов в тему
     },
     files: {
-        src: 'app/files/**/*',
-        dest: 'dist/files'
+        src: 'src/files/**/*', // Все остальные файлы
+        dest: `wp-content/themes/${themeName}/assets/files` // Для других файлов в тему
     }
 };
 
@@ -91,9 +93,9 @@ function html() {
             prefix: '@@',
             basepath: '@file'
         }))
-        .pipe(data(() => require(`./${paths.html.json}`)))
-        .pipe(webpHtml())
-        .pipe(dest(paths.html.dest))
+        .pipe(data(() => require(`./${paths.html.json}`))) // Пример для использования JSON данных
+        .pipe(webpHtml()) // Для вставки WebP изображений в HTML
+        .pipe(dest(`wp-content/themes/${themeName}/`)) // Генерация HTML в тему
         .pipe(browserSync.stream());
 }
 
@@ -102,7 +104,7 @@ function optimizeImages() {
     return src(paths.images.src)
         .pipe(newer(paths.images.dest))  // Это для новых изображений
         .pipe(image())
-        .pipe(dest(paths.images.dest));
+        .pipe(dest(paths.images.dest)); // Путь для WP
 }
 
 // WebP (только новые)
@@ -113,15 +115,15 @@ function webpConversion() {
             ext: '.webp'
         }))  // Только новые изображения для конвертации в WebP
         .pipe(webp())
-        .pipe(dest(paths.images.webpDest));
+        .pipe(dest(paths.images.webpDest)); // Путь для WP
 }
 
-function svgSprite() {
-    return src('app/images/icons/*.svg')
-        .pipe(svgSprite({
+function generateSvgSprite() {
+    return src('src/images/icons/*.svg')
+        .pipe(svgSpriteModule({
             mode: {
                 symbol: {
-                    sprite: 'sprite.svg', // теперь просто имя файла
+                    sprite: 'sprite.svg', // название спрайта
                     example: false
                 }
             },
@@ -132,17 +134,16 @@ function svgSprite() {
                             plugins: [
                                 {removeAttrs: {attrs: '(fill|stroke|style)'}}
                             ]
-
                         }
                     }
                 ]
             }
         }))
-        .pipe(dest('dist/img/icons')); // логичный путь
+        .pipe(dest(`wp-content/themes/${themeName}/assets/images/icons`)); // Путь для WP
 }
 
 function processJsonData() {
-    return src('app/data/**/*.json')
+    return src('src/data/**/*.json')
         .pipe(changed('dist/data', {hasChanged: changed.compareContents}))  // Проверка изменения содержимого
         .pipe(dest('dist/data'));
 }
@@ -162,22 +163,21 @@ function cleanDist() {
 // Watch + Server
 function watching() {
     browserSync.init({
-        server: {baseDir: 'app/'}
+        server: {baseDir: 'dist'}
     });
-    watch(paths.styles.src, styles);
+    watch('src/scss/**/*.scss', styles);
     watch(paths.html.watch, html);
-    watch('app/images/icons/*.svg', svgSprite);
-    watch('app/*.html').on('change', browserSync.reload);
-    watch(paths.images.src, series(optimizeImages, webpConversion));  // Слежка за изображениями
-    watch('app/data/**/*.json', processJsonData);  // Пример слежки за другими файлами (JSON)
+    watch('src/images/icons/*.svg', generateSvgSprite);
+    watch('dist/*.html').on('change', browserSync.reload);
+    watch(paths.images.src, series(optimizeImages, webpConversion)); // Слежка за изображениями
+    watch('src/data/**/*.json', processJsonData); // Пример слежки за другими файлами (JSON)
 }
 
 // Сборка
 const build = series(
     cleanDist,
-    parallel(styles, scripts, html, optimizeImages, webpConversion, svgSprite, processJsonData, copy.fonts, copy.files)
+    parallel(styles, scripts, html, optimizeImages, webpConversion, generateSvgSprite, processJsonData, copy.fonts, copy.files)
 );
-
 
 // CLI
 exports.styles = styles;
