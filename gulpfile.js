@@ -118,9 +118,15 @@ function webpConversion() {
         .pipe(dest(paths.images.webpDest)); // Путь для WP
 }
 
+<<<<<<< HEAD
 function generateSvgSprite() {
     return src('src/images/icons/*.svg')
         .pipe(svgSpriteModule({
+=======
+function svgSprite() {
+    return src('src/images/icons/*.svg')
+        .pipe(svgSprite({
+>>>>>>> 78a1cf3048d52cd23045be75bba73a5271a3c210
             mode: {
                 symbol: {
                     sprite: 'sprite.svg', // название спрайта
@@ -167,7 +173,11 @@ function watching() {
     });
     watch('src/scss/**/*.scss', styles);
     watch(paths.html.watch, html);
+<<<<<<< HEAD
     watch('src/images/icons/*.svg', generateSvgSprite);
+=======
+    watch('src/images/icons/*.svg', svgSprite);
+>>>>>>> 78a1cf3048d52cd23045be75bba73a5271a3c210
     watch('dist/*.html').on('change', browserSync.reload);
     watch(paths.images.src, series(optimizeImages, webpConversion)); // Слежка за изображениями
     watch('src/data/**/*.json', processJsonData); // Пример слежки за другими файлами (JSON)
@@ -196,3 +206,4 @@ exports.default = series(
     parallel(styles, scripts, html),
     watching
 );
+
