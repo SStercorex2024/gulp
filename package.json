@@ -1,6 +1,6 @@
 {
   "name": "gulp-start",
-  "version": "0.0.3",
+  "version": "0.0.4",
   "description": "my pack gulp ",
   "main": "index.js",
   "scripts": {
@@ -21,6 +21,7 @@
     "gulp-newer": "^1.4.0",
     "gulp-notify": "^5.0.0",
     "gulp-plumber": "^1.2.1",
+    "gulp-replace": "^1.1.4",
     "gulp-sass": "^6.0.1",
     "gulp-sass-glob": "^1.1.0",
     "gulp-svg-sprite": "^2.0.3",
