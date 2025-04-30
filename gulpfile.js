@@ -12,6 +12,13 @@ const avif = require('gulp-avif');
 const newer = require('gulp-newer');
 const ttf2woff2 = require('gulp-ttf2woff2');
 const include = require('gulp-include');
+const svgmin = require('gulp-svgmin');
+
+function sprites() {
+    return src('app/images/sprite/*.svg')
+        .pipe(svgmin())
+        .pipe(dest('app/images/'))
+}
 
 function pages() {
     return src('app/pages/*.html')
@@ -72,6 +79,7 @@ function watching() {
     })
     watch(["app/scss/style.scss"], styles);
     watch(["app/js/main.js"], scripts);
+    watch(["app/images/sprites"], sprites);
     watch(["app/images/src"], images);
     watch(["app/components/*", "app/pages/*"], pages);
     watch(["app/*.html"]).on("change", browserSync.reload);
@@ -97,10 +105,11 @@ exports.fonts = fonts
 exports.styles = styles;
 exports.scripts = scripts;
 exports.watching = watching;
+exports.sprites = sprites;
 exports.images = images;
 exports.pages = pages;
 exports.bilding = bilding;
 exports.cleanDist = cleanDist;
 
 exports.bild = series(cleanDist, bilding);
-exports.default = parallel(styles, scripts, images, pages, watching);
+exports.default = parallel(styles, scripts, images, sprites, pages, watching);
