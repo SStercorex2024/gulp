@@ -1,0 +1,10 @@
+.container {
+  max-width: 500px;
+  aspect-ratio: 1/1;
+
+  &__box {
+    background-color: deeppink;
+    width: 200px;
+    aspect-ratio: 1/1;
+  }
+}
