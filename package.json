@@ -1,3 +1,5 @@
+{
+  "name": "gulp-start",
   "version": "0.0.7",
   "description": "my pack gulp ",
   "main": "index.js",
