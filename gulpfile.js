@@ -50,7 +50,7 @@ function nunjucks(done) {
         path: ["app/templates"],
       })
     )
-    .pipe(dest("app"))
+    .pipe(dest("app/components/rendered"))
     .pipe(browserSync.stream());
 }
 
