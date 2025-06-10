@@ -20,6 +20,8 @@ const nunjucksRender = require("gulp-nunjucks-render");
 const gulpData = require("gulp-data");
 const fs = require("fs");
 const path = require("path");
+const postcss = require("gulp-postcss");
+const pxtorem = require("postcss-pxtorem");
 
 function nunjucks(done) {
   const njkFolder = "app/njk-pages/";
@@ -108,17 +110,37 @@ function images() {
 
 function styles() {
   return src("app/scss/*.scss")
-    .pipe(scss({ outputStyle: "compressed" })) // Сначала компиляция SCSS в CSS
+    .pipe(scss({ outputStyle: "compressed" }))
     .pipe(
       autoprefixer({ overrideBrowserslist: ["last 10 versions"], grid: true })
-    ) // Потом автопрефиксер
-    .pipe(concat("style.min.css")) // Потом объединение
+    ) 
+    .pipe(
+      postcss([
+        pxtorem({
+          rootValue: 16, 
+          unitPrecision: 5,
+          propList: ["*"], 
+          selectorBlackList: [], 
+          replace: true,
+          mediaQuery: false,
+          minPixelValue: 0,
+        }),
+      ])
+    )
+    .pipe(concat("style.min.css"))
     .pipe(dest("app/css"))
     .pipe(browserSync.stream());
 }
 
 function scripts() {
-  return src(["node_modules/swiper/swiper-bundle.js", "app/js/main.js"])
+  return src([
+    "node_modules/bootstrap/dist/js/bootstrap.bundle.min.js",
+    "node_modules/swiper/swiper-bundle.js",
+    "app/js/main.js",
+  ])
+    .pipe(plumber())
+    .pipe(include())
+    .on("error", console.log)
     .pipe(concat("main.min.js"))
     .pipe(uglify())
     .pipe(dest("app/js"))
@@ -183,4 +205,3 @@ exports.default = parallel(
   watching,
   images
 );
-
